@@ -15,9 +15,17 @@
         const data = dataToUse || nodeData;
         try {
                 console.log('Loaded', data.length, 'nodes');
-                document.getElementById('node-count').textContent = data.length;
-                                const countries = new Set(data.filter(n => n.country).map(n => n.country));
-                document.getElementById('country-count').textContent = countries.size;
+                // Update node count dynamically
+                const nodeCountEl = document.getElementById('node-count');
+                if (nodeCountEl) {
+                    nodeCountEl.textContent = data.length;
+                }
+                // Calculate and update country count dynamically
+                const countries = new Set(data.filter(n => n.country && n.country.trim()).map(n => n.country));
+                const countryCountEl = document.getElementById('country-count');
+                if (countryCountEl) {
+                    countryCountEl.textContent = countries.size;
+                }
                             const heatData = data.map(node => [node.latitude, node.longitude, 1]);
                 if (heatmapLayer) {
                     map.removeLayer(heatmapLayer);
@@ -67,21 +75,18 @@
                 const loader = document.getElementById('update-loader');
                 const updateText = document.getElementById('update-text');
                 if (loader) loader.classList.add('hidden');
-                if (updateText) updateText.textContent = 'Nodes will be updated every 10 seconds';
+                if (updateText) updateText.textContent = 'Data will be refetched after 10 seconds';
         } catch(error) {
             console.error('Error processing nodes:', error);
             const loader = document.getElementById('update-loader');
             const updateText = document.getElementById('update-text');
             if (loader) loader.classList.add('hidden');
-            if (updateText) updateText.textContent = 'Error processing data';
+            if (updateText) updateText.textContent = 'Data will be refetched after 10 seconds';
         }
     }
-    loadNodes();
+    // Don't load embedded data immediately - fetch from server first
+    // loadNodes(); // Removed - will fetch from server first
     function tryUpdateFromFile() {
-        const loader = document.getElementById('update-loader');
-        const updateText = document.getElementById('update-text');
-        if (loader) loader.classList.remove('hidden');
-        if (updateText) updateText.textContent = 'Updating nodes...';
         fetch('bitcoin_nodes.json?t=' + new Date().getTime())
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok');
@@ -90,13 +95,11 @@
             .then(data => {
                 console.log('✓ Updated from server:', data.length, 'nodes');
                 loadNodes(data);
-                if (loader) loader.classList.add('hidden');
-                if (updateText) updateText.textContent = 'Map updated - watching for changes...';
             })
             .catch(error => {
                 console.log('Using embedded data (server fetch failed):', error.message);
-                if (loader) loader.classList.add('hidden');
-                if (updateText) updateText.textContent = 'Using cached data - will retry...';
+                // Only use embedded data as last resort
+                loadNodes();
             });
     }
     let eventSource = null;
@@ -108,7 +111,7 @@
                 sseConnected = true;
                 console.log('✓ Connected to real-time update stream');
                 const updateText = document.getElementById('update-text');
-                if (updateText) updateText.textContent = 'Connected - watching for changes...';
+                if (updateText) updateText.textContent = 'Data will be refetched after 10 seconds';
             };
             eventSource.onmessage = function(event) {
                 try {
@@ -137,7 +140,8 @@
         }
     }
     connectSSE();
-    setTimeout(tryUpdateFromFile, 2000);
+    // Fetch immediately on page load
+    tryUpdateFromFile();
     setTimeout(function() {
         map.invalidateSize();
     }, 100);
