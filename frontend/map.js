@@ -75,73 +75,30 @@
                 const loader = document.getElementById('update-loader');
                 const updateText = document.getElementById('update-text');
                 if (loader) loader.classList.add('hidden');
-                if (updateText) updateText.textContent = 'Data will be refetched after 10 seconds';
+                if (updateText) updateText.textContent = 'Data loaded';
         } catch(error) {
             console.error('Error processing nodes:', error);
             const loader = document.getElementById('update-loader');
             const updateText = document.getElementById('update-text');
             if (loader) loader.classList.add('hidden');
-            if (updateText) updateText.textContent = 'Data will be refetched after 10 seconds';
+            if (updateText) updateText.textContent = 'Error loading data';
         }
     }
-    // Don't load embedded data immediately - fetch from server first
-    // loadNodes(); // Removed - will fetch from server first
-    function tryUpdateFromFile() {
-        fetch('bitcoin_nodes.json?t=' + new Date().getTime())
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                console.log('✓ Updated from server:', data.length, 'nodes');
-                loadNodes(data);
-            })
-            .catch(error => {
-                console.log('Using embedded data (server fetch failed):', error.message);
-                // Only use embedded data as last resort
-                loadNodes();
-            });
-    }
-    let eventSource = null;
-    let sseConnected = false;
-    function connectSSE() {
-        try {
-            eventSource = new EventSource('/events');
-            eventSource.onopen = function() {
-                sseConnected = true;
-                console.log('✓ Connected to real-time update stream');
-                const updateText = document.getElementById('update-text');
-                if (updateText) updateText.textContent = 'Data will be refetched after 10 seconds';
-            };
-            eventSource.onmessage = function(event) {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'file_changed') {
-                        console.log('✓ File change detected, updating map...');
-                        tryUpdateFromFile();
-                    }
-                } catch (e) {
-                    console.log('SSE message parse error:', e);
-                }
-            };
-            eventSource.onerror = function(error) {
-                if (!sseConnected) {
-                    console.log('SSE connection failed, falling back to polling');
-                    setInterval(tryUpdateFromFile, 10000);
-                } else {
-                    console.log('SSE connection lost, reconnecting...');
-                    sseConnected = false;
-                    setTimeout(connectSSE, 5000);
-                }
-            };
-        } catch (e) {
-            console.log('SSE not supported, using polling:', e);
-            setInterval(tryUpdateFromFile, 10000);
-        }
-    }
-    connectSSE();
-    // Fetch immediately on page load
-    tryUpdateFromFile();
+    // Load data once on page load
+    fetch('bitcoin_nodes.json')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            console.log('✓ Loaded', data.length, 'nodes from file');
+            loadNodes(data);
+        })
+        .catch(error => {
+            console.error('Error loading data:', error.message);
+            console.log('Using embedded data as fallback');
+            loadNodes();
+        });
     setTimeout(function() {
         map.invalidateSize();
     }, 100);
