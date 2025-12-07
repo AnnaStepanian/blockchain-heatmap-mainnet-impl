@@ -14,43 +14,20 @@ A Python-based Bitcoin network crawler that discovers Bitcoin **Mainnet** nodes,
 
 Follow these commands **in order** to set up and run the Bitcoin node crawler:
 
-### Step 1: Install Dependencies
 ```bash
-# Install all required Python packages (asyncio, aiohttp, etc.)
+# Step 1: Install dependencies
 pip install -r requirements.txt
-```
 
-### Step 2: Crawl Bitcoin Nodes
-```bash
-# Crawl Bitcoin network, discover nodes, get geolocation data, and store in database
-# This will:
-#   - Connect to seed nodes and discover other Bitcoin nodes
-#   - Collect node information (IP, port, version, etc.)
-#   - Get geolocation data for each IP address
-#   - Store all data in SQLite database (backend/bitcoin_nodes.db)
-#   - Update frontend/bitcoin_nodes.json with newly crawled nodes
+# Step 2: Crawl Bitcoin nodes, get geolocation, store in database, update JSON
 python3 main.py --max-nodes 1000 --create-heatmap
-```
 
-### Step 3: Update JSON File (Optional but Recommended)
-```bash
-# Update frontend/bitcoin_nodes.json with ALL nodes from database (not just new ones)
-# This ensures the JSON file contains all historical nodes, not just the ones from the last crawl
+# Step 3: Update JSON file with ALL nodes from database (not just new ones)
 python3 -m backend.update_json
-```
 
-### Step 4: Create/Update Index HTML (Optional)
-```bash
-# Create or update the frontend/index.html file with heatmap visualization
-# This generates the HTML file that displays the interactive map
+# Step 4: Create/update index.html with heatmap visualization
 python3 create_index.py
-```
 
-### Step 5: Start the Web Server
-```bash
-# Start HTTP server on http://localhost:8000 and open the map in your browser
-# The server serves the frontend files (index.html, map.js, styles.css, bitcoin_nodes.json)
-# Press Ctrl+C to stop the server
+# Step 5: Start HTTP server on http://localhost:8000 (Ctrl+C to stop)
 python3 start_live_map.py
 ```
 
@@ -58,19 +35,19 @@ python3 start_live_map.py
 
 ### Update JSON File Only (Without Crawling)
 ```bash
-# If you already have nodes in the database and just want to update the JSON file
+# Update JSON file from existing database
 python3 -m backend.update_json
 ```
 
 ### Create Heatmap from Existing Database (Skip Crawling)
 ```bash
-# If you already have node data in the database and want to create/update the heatmap
+# Create heatmap from existing database data
 python3 main.py --heatmap-only
 ```
 
 ### Kill Process Using Port 8000 (If Needed)
 ```bash
-# If port 8000 is already in use, kill the process using it
+# Kill process using port 8000
 lsof -ti :8000 | xargs kill -9
 ```
 
