@@ -28,6 +28,8 @@ python3 -m backend.update_json
 python3 start_live_map.py
 ```
 
+Open this link in your browser: http://localhost:8002/index.html
+
 ## License
 
 This project is for educational purposes. Use responsibly and respect Bitcoin network resources.
