@@ -284,32 +284,22 @@ Examples:
     
     if args.create_heatmap:
         logger.info("=" * 60)
-        logger.info("Step 4: Creating Visualizations")
+        logger.info("Step 4: Updating JSON File")
         logger.info("=" * 60)
         
-        nodes_for_viz = [node for node in nodes_data if node.get('latitude')]
+        # Get ALL nodes from database, not just newly crawled ones
+        all_nodes = db.get_nodes_with_location()
         
-        if nodes_for_viz:
-            heatmap_file = create_heatmap(
-                nodes_for_viz,
-                f"{args.output_dir}/index.html",
-                f"{args.output_dir}/bitcoin_nodes.json",
-                load_once=True
-            )
-            logger.info(f"Heatmap saved to: {heatmap_file}")
-            
-            # Try to create statistics plot
-            try:
-                stats_file = create_statistics_plot(
-                    nodes_data,
-                    f"{args.output_dir}/bitcoin_nodes_stats.html"
-                )
-                if stats_file:
-                    logger.info(f"Statistics plot saved to: {stats_file}")
-            except Exception as e:
-                logger.warning(f"Could not create statistics plot: {e}")
+        if all_nodes:
+            # Only update JSON file, don't overwrite index.html
+            # index.html reads from bitcoin_nodes.json via map.js
+            from visualization import export_nodes_json
+            json_file = f"{args.output_dir}/bitcoin_nodes.json"
+            export_nodes_json(all_nodes, json_file)
+            logger.info(f"Updated {json_file} with {len(all_nodes)} nodes (all nodes from database)")
+            logger.info("Note: index.html was not modified - it reads from bitcoin_nodes.json")
         else:
-            logger.warning("No nodes with location data for visualization")
+            logger.warning("No nodes with location data in database")
     
     logger.info("=" * 60)
     logger.info("Done!")
