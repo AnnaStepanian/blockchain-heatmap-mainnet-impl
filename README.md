@@ -16,9 +16,23 @@ A Python-based Bitcoin network crawler that discovers Bitcoin **Mainnet** nodes,
 pip install -r requirements.txt
 ```
 
-## How to Run
+## Quick Start
 
-### View the Map
+### 1. Update Node Data
+
+To crawl new Bitcoin nodes and update `frontend/bitcoin_nodes.json`:
+
+```bash
+# Step 1: Crawl new nodes and add to database
+python3 main.py --max-nodes 1000 --create-heatmap
+
+# Step 2: Update JSON file with ALL nodes from database
+python3 -m backend.update_json
+```
+
+**Note:** The `--create-heatmap` flag only exports newly crawled nodes. Always run `python3 -m backend.update_json` after crawling to get all nodes in the JSON file.
+
+### 2. Run the Server
 
 Start the HTTP server to view the map:
 
@@ -26,35 +40,31 @@ Start the HTTP server to view the map:
 python3 start_live_map.py
 ```
 
-This will start a server on `http://localhost:8000` and open the map in your browser. The map displays a snapshot of nodes from `bitcoin_nodes.json`.
+This will:
+- Start a server on `http://localhost:8000`
+- Open the map in your browser
+- Display nodes from `frontend/bitcoin_nodes.json`
 
-### Crawl Nodes and Create Heatmap
+Press `Ctrl+C` to stop the server.
 
-Crawl Bitcoin Mainnet nodes and create a heatmap:
-
+**If port 8000 is already in use:**
 ```bash
-python3 main.py --max-nodes 1000 --create-heatmap
+lsof -ti :8000 | xargs kill -9
 ```
 
-This will:
-1. Crawl up to 1000 nodes
-2. Get geolocation data
-3. Store data in the database
-4. Generate the interactive heatmap
+## Detailed Usage
 
-### Update Node Data
+### Update Node Data Only
 
-To update the `bitcoin_nodes.json` file from the database:
+If you only want to update the JSON file from existing database data:
 
 ```bash
 python3 -m backend.update_json
 ```
 
-The map displays a snapshot - update the JSON file manually to refresh the data.
-
 ### View Existing Data
 
-If you already have node data in the database:
+If you already have node data in the database and want to create a heatmap:
 
 ```bash
 python3 main.py --heatmap-only
