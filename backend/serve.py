@@ -8,6 +8,7 @@ import webbrowser
 import threading
 import queue
 import time
+import socket
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -15,7 +16,18 @@ from watchdog.events import FileSystemEventHandler
 PROJECT_ROOT = Path(__file__).parent.parent
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 JSON_FILE = FRONTEND_DIR / "bitcoin_nodes.json"
-PORT = 8000
+DEFAULT_PORT = 8000
+
+
+def find_available_port(start_port=8000, max_attempts=10):
+    for port in range(start_port, start_port + max_attempts):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('', port))
+                return port
+        except OSError:
+            continue
+    return None
 
 file_change_queue = queue.Queue()
 sse_clients = []
@@ -99,9 +111,19 @@ def main():
     
     observer = start_file_watcher()
     
+    port = find_available_port(DEFAULT_PORT)
+    if port is None:
+        print(f"Error: Could not find an available port starting from {DEFAULT_PORT}")
+        observer.stop()
+        observer.join()
+        sys.exit(1)
+    
+    if port != DEFAULT_PORT:
+        print(f"⚠ Port {DEFAULT_PORT} is in use, using port {port} instead")
+    
     try:
-        with socketserver.TCPServer(("", PORT), CORSRequestHandler) as httpd:
-            url = f"http://localhost:{PORT}/index.html"
+        with socketserver.TCPServer(("", port), CORSRequestHandler) as httpd:
+            url = f"http://localhost:{port}/index.html"
             print("=" * 60)
             print("Bitcoin Node Map Server")
             print("=" * 60)
@@ -121,11 +143,7 @@ def main():
         print("Server stopped.")
         sys.exit(0)
     except OSError as e:
-        if e.errno == 48:
-            print(f"Error: Port {PORT} is already in use.")
-            print(f"Please close the application using port {PORT} or change the PORT in serve.py")
-        else:
-            print(f"Error starting server: {e}")
+        print(f"Error starting server: {e}")
         observer.stop()
         observer.join()
         sys.exit(1)

@@ -1,8 +1,3 @@
-"""
-IP Geolocation module
-Gets geographic location data for IP addresses
-"""
-
 import asyncio
 import aiohttp
 import logging
@@ -15,10 +10,6 @@ logger = logging.getLogger(__name__)
 
 class IPGeolocator:
     def __init__(self, rate_limit: float = 0.1):
-        """
-        Initialize geolocator with rate limiting.
-        rate_limit: seconds between requests
-        """
         self.rate_limit = rate_limit
         self.last_request_time = 0
         self.session: Optional[aiohttp.ClientSession] = None
@@ -32,18 +23,12 @@ class IPGeolocator:
             await self.session.close()
     
     async def _rate_limit(self):
-        """Enforce rate limiting."""
         elapsed = time.time() - self.last_request_time
         if elapsed < self.rate_limit:
             await asyncio.sleep(self.rate_limit - elapsed)
         self.last_request_time = time.time()
     
     async def get_location(self, ip: str) -> Optional[Dict]:
-        """
-        Get geolocation for an IP address.
-        Uses ip-api.com (free tier, no API key required).
-        Returns dict with latitude, longitude, country, city, etc.
-        """
         if not self.session:
             self.session = aiohttp.ClientSession()
         
@@ -81,10 +66,6 @@ class IPGeolocator:
             return None
     
     async def get_locations_batch(self, ips: List[str], max_concurrent: int = 10) -> Dict[str, Optional[Dict]]:
-        """
-        Get geolocation for multiple IPs concurrently.
-        Returns dict mapping IP -> location data.
-        """
         semaphore = asyncio.Semaphore(max_concurrent)
         results = {}
         
@@ -99,12 +80,8 @@ class IPGeolocator:
         return results
 
 
-# Alternative: Using ipinfo.io (requires free API key, better rate limits)
 class IPInfoGeolocator:
     def __init__(self, api_key: Optional[str] = None, rate_limit: float = 0.1):
-        """
-        Initialize with ipinfo.io (optional API key for better rate limits).
-        """
         self.api_key = api_key
         self.rate_limit = rate_limit
         self.last_request_time = 0
@@ -119,14 +96,12 @@ class IPInfoGeolocator:
             await self.session.close()
     
     async def _rate_limit(self):
-        """Enforce rate limiting."""
         elapsed = time.time() - self.last_request_time
         if elapsed < self.rate_limit:
             await asyncio.sleep(self.rate_limit - elapsed)
         self.last_request_time = time.time()
     
     async def get_location(self, ip: str) -> Optional[Dict]:
-        """Get geolocation using ipinfo.io."""
         if not self.session:
             self.session = aiohttp.ClientSession()
         
@@ -142,7 +117,6 @@ class IPInfoGeolocator:
                 if response.status == 200:
                     data = await response.json()
                     
-                    # Parse location string (format: "lat,lon")
                     lat, lon = None, None
                     if 'loc' in data:
                         try:

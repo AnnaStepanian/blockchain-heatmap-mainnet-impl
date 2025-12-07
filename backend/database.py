@@ -1,7 +1,3 @@
-"""
-Database module for storing Bitcoin node data
-"""
-
 import sqlite3
 import logging
 from typing import List, Dict, Optional
@@ -17,7 +13,6 @@ class NodeDatabase:
         self.init_database()
     
     def init_database(self):
-        """Initialize the database schema."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -49,7 +44,6 @@ class NodeDatabase:
         logger.info(f"Database initialized at {self.db_path}")
     
     def insert_node(self, node_data: Dict) -> bool:
-        """Insert a single node into the database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -81,7 +75,6 @@ class NodeDatabase:
             conn.close()
     
     def insert_nodes_batch(self, nodes_data: List[Dict]):
-        """Insert multiple nodes in a batch."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -112,7 +105,6 @@ class NodeDatabase:
             conn.close()
     
     def get_all_nodes(self) -> List[Dict]:
-        """Get all nodes from the database."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -124,7 +116,6 @@ class NodeDatabase:
         return [dict(row) for row in rows]
     
     def get_nodes_with_location(self) -> List[Dict]:
-        """Get all nodes that have geolocation data."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -136,7 +127,6 @@ class NodeDatabase:
         return [dict(row) for row in rows]
     
     def get_statistics(self) -> Dict:
-        """Get statistics about stored nodes."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         

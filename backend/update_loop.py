@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Background script that updates bitcoin_nodes.json every 10 seconds
-Run this alongside the server to have live updates
-"""
 
 import time
 import logging
@@ -13,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    """Update JSON file every 10 seconds"""
     logger.info("Starting JSON update loop (every 10 seconds)")
     logger.info("Press Ctrl+C to stop")
     

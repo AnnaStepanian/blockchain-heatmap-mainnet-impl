@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Create index.html - Quick script to regenerate frontend
-Run from project root: python create_index.py
-"""
 
 import sys
 import os

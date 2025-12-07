@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Background script that crawls Bitcoin nodes every 10 seconds
-This discovers new nodes and updates the database continuously
-"""
 
 import asyncio
 import time
@@ -32,7 +28,6 @@ BITCOIN_SEED_NODES = [
 
 
 def resolve_dns_seeds():
-    """Resolve DNS seed nodes to IP addresses."""
     resolved_nodes = []
     for hostname, port in BITCOIN_SEED_NODES:
         try:
@@ -50,7 +45,6 @@ def resolve_dns_seeds():
 
 
 async def fetch_bitnodes_seeds(max_nodes: int = 200):
-    """Fetch known Bitcoin nodes from bitnodes.io API."""
     try:
         import aiohttp
         async with aiohttp.ClientSession() as session:
@@ -76,9 +70,6 @@ logger = logging.getLogger(__name__)
 
 
 async def crawl_batch(max_nodes: int = 50, max_concurrent: int = 50):
-    """
-    Crawl a small batch of nodes quickly (for frequent updates)
-    """
     try:
         seed_nodes = resolve_dns_seeds()
         
@@ -138,7 +129,6 @@ async def crawl_batch(max_nodes: int = 50, max_concurrent: int = 50):
 
 
 async def main():
-    """Run crawler every 10 seconds"""
     logger.info("=" * 60)
     logger.info("Starting Bitcoin Node Crawler Loop")
     logger.info("=" * 60)

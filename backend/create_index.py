@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Create index.html that loads all nodes from database once
-"""
 
 from database import NodeDatabase
 from visualization import create_heatmap, export_nodes_json
@@ -12,9 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 def create_index_html(db_path: str = "backend/bitcoin_nodes.db", output_file: str = "frontend/index.html"):
-    """
-    Create index.html that loads all nodes from database once.
-    """
     db = NodeDatabase(db_path)
     nodes = db.get_nodes_with_location()
     

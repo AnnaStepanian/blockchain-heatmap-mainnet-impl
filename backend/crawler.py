@@ -1,8 +1,3 @@
-"""
-Bitcoin Node Crawler
-Crawls Bitcoin network nodes using asyncio for concurrent connections
-"""
-
 import asyncio
 import socket
 import ipaddress
@@ -24,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 def is_private_ip(ip: str) -> bool:
-    """Check if an IP address is private/local."""
     try:
         ip_obj = ipaddress.ip_address(ip)
         return ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
@@ -43,10 +37,6 @@ class BitcoinNodeCrawler:
         self.failed_nodes: Set[Tuple[str, int]] = set()
         
     async def connect_to_node(self, ip: str, port: int) -> Optional[dict]:
-        """
-        Connect to a Bitcoin node and perform handshake.
-        Returns node information or None if connection fails.
-        """
         async with self.semaphore:
             if (ip, port) in self.crawled_nodes:
                 return None
@@ -208,7 +198,6 @@ class BitcoinNodeCrawler:
                 return None
     
     def _parse_version_payload(self, payload: bytes) -> dict:
-        """Parse VERSION message payload to extract node information."""
         try:
             import struct
             from bitcoin_protocol import varint_decode
@@ -255,14 +244,6 @@ class BitcoinNodeCrawler:
             return {}
     
     async def crawl(self, seed_nodes: List[Tuple[str, int]], max_nodes: int = 1000, update_viz_callback=None):
-        """
-        Crawl Bitcoin network starting from seed nodes.
-        
-        Args:
-            seed_nodes: List of (ip, port) tuples to start crawling from
-            max_nodes: Maximum number of nodes to crawl
-            update_viz_callback: Optional callback function(node_data) to update visualization
-        """
         logger.info(f"Starting crawl with {len(seed_nodes)} seed nodes, max {max_nodes} nodes")
         
         for ip, port in seed_nodes:

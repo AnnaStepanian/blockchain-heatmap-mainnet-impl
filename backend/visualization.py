@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Visualization functions for Bitcoin node data
-"""
 
 import json
 import logging
@@ -12,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 def export_nodes_json(nodes_data: List[Dict], json_file: str = "frontend/bitcoin_nodes.json") -> str:
-    """Export node data to JSON file."""
     with open(json_file, 'w') as f:
         json.dump(nodes_data, f, indent=2)
     logger.info(f"Exported {len(nodes_data)} nodes to {json_file}")
@@ -20,10 +16,6 @@ def export_nodes_json(nodes_data: List[Dict], json_file: str = "frontend/bitcoin
 
 
 def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.html", json_file: str = "frontend/bitcoin_nodes.json", load_once: bool = False) -> str:
-    """
-    Create a simple interactive heatmap of Bitcoin nodes on a world map.
-    Uses pure Leaflet (no Folium) for simplicity and reliability.
-    """
     valid_nodes = [
         node for node in nodes_data
         if node.get('latitude') is not None 
@@ -45,15 +37,13 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
     
     unique_countries = len(set(node.get('country', '') for node in valid_nodes if node.get('country')))
     
-    # Build update code based on load_once flag
     update_text = "Data loaded" if load_once else "Nodes will be updated every 10 seconds"
     
     if load_once:
-        update_js_code = "// Static mode - no auto-updates"
+        update_js_code = ""
     else:
-        update_js_code = """// For dynamic updates, fetch from JSON file every 10 seconds
+        update_js_code = """
         function tryUpdateFromFile() {
-            // Show loader
             const loader = document.getElementById('update-loader');
             const updateText = document.getElementById('update-text');
             if (loader) loader.classList.remove('hidden');
@@ -65,23 +55,18 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
                     return response.json();
                 })
                         .then(data => {
-                    // Update with fresh data from server
                     console.log('✓ Updated from server:', data.length, 'nodes');
                     loadNodes(data);
                         })
                         .catch(error => {
-                    // Silently fail - we have embedded data as fallback
                     console.log('Using embedded data (server fetch failed):', error.message);
-                    // Hide loader even on error
                     if (loader) loader.classList.add('hidden');
                     if (updateText) updateText.textContent = 'Nodes will be updated every 10 seconds';
                         });
                 }
                 
-        // Update from server every 10 seconds
         setInterval(tryUpdateFromFile, 10000);
         
-        // Also try to update immediately after page load (after 2 seconds)
         setTimeout(tryUpdateFromFile, 2000);"""
     
     html_content = f"""<!DOCTYPE html>
@@ -91,7 +76,6 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bitcoin Network Map</title>
     
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     
     <style>
@@ -185,9 +169,8 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
             display: none;
         }}
     </style>
-</head>
+    </head>
 <body>
-    <!-- Statistics Panel -->
     <div class="stats-panel">
         <h3>🌍 Bitcoin Network Mainnet</h3>
         <div class="stats-content">
@@ -200,15 +183,12 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
         </p>
     </div>
     
-    <!-- Map Container -->
     <div id="map"></div>
     
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     
     <script>
-        // Initialize map
         const map = L.map('map', {{
             center: [{avg_lat}, {avg_lon}],
             zoom: 2,
@@ -216,41 +196,32 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
             worldCopyJump: false
         }});
         
-        // Add OpenStreetMap tiles
         L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         }}).addTo(map);
         
-        // Variables for layers
         let heatmapLayer = null;
         let markersLayer = L.layerGroup().addTo(map);
         
-        // Node data embedded directly (avoids CORS issues with file://)
         const nodeData = {json.dumps(valid_nodes, ensure_ascii=False)};
         
-        // Function to load and display nodes
         function loadNodes(dataToUse = null) {{
-            // Use provided data or embedded data
             const data = dataToUse || nodeData;
             
             try {{
                     console.log('Loaded', data.length, 'nodes');
                                 
-                                // Update statistics
                     document.getElementById('node-count').textContent = data.length;
                                     const countries = new Set(data.filter(n => n.country).map(n => n.country));
                     document.getElementById('country-count').textContent = countries.size;
                                 
-                                // Prepare heatmap data
                                 const heatData = data.map(node => [node.latitude, node.longitude, 1]);
                                 
-                    // Remove old heatmap
                     if (heatmapLayer) {{
                         map.removeLayer(heatmapLayer);
                     }}
                     
-                    // Add new heatmap
                                 if (typeof L.heatLayer !== 'undefined') {{
                                     heatmapLayer = L.heatLayer(heatData, {{
                                         radius: 20,
@@ -267,10 +238,8 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
                         }}).addTo(map);
                                 }}
                                 
-                    // Clear old markers
                                     markersLayer.clearLayers();
                                     
-                    // Add markers (limit to 1000 for performance)
                                     const nodesToShow = data.length <= 1000 ? data : data.slice(0, 1000);
                                     nodesToShow.forEach(node => {{
                                         const popupText = `
@@ -300,7 +269,6 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
                                         console.log('Showing first 1000 markers for performance');
                                     }}
                     
-                    // Hide loader and show update text
                     const loader = document.getElementById('update-loader');
                     const updateText = document.getElementById('update-text');
                     if (loader) loader.classList.add('hidden');
@@ -314,12 +282,10 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
             }}
         }}
         
-        // Load nodes when page opens
         loadNodes();
         
         {update_js_code}
         
-        // Ensure map is visible
         setTimeout(function() {{
             map.invalidateSize();
         }}, 100);
@@ -336,6 +302,5 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
 
 
 def create_statistics_plot(nodes_data: List[Dict], output_file: str = "bitcoin_nodes_stats.html") -> str:
-    """Create statistics visualization (placeholder)."""
     logger.info("Statistics plot creation not implemented")
     return None

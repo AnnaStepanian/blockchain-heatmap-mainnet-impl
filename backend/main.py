@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Bitcoin Node Crawler and Heatmap Generator
-Main script that orchestrates crawling, geolocation, and visualization
-"""
 
 import asyncio
 import argparse
@@ -36,11 +32,9 @@ BITCOIN_SEED_NODES = [
 
 
 async def fetch_bitnodes_seeds(max_nodes: int = 10000) -> List[Tuple[str, int]]:
-    """Fetch known Bitcoin nodes from bitnodes.io API."""
     try:
         import aiohttp
         async with aiohttp.ClientSession() as session:
-            # Try to get nodes from bitnodes API
             try:
                 logger.info("Fetching nodes from bitnodes.io API...")
                 async with session.get('https://bitnodes.io/api/v1/snapshots/latest/', timeout=aiohttp.ClientTimeout(total=30)) as resp:
@@ -48,14 +42,12 @@ async def fetch_bitnodes_seeds(max_nodes: int = 10000) -> List[Tuple[str, int]]:
                         data = await resp.json()
                         nodes = []
                         if 'nodes' in data:
-                            # Get all nodes, not just 50!
                             node_list = list(data['nodes'].keys())
                             logger.info(f"Found {len(node_list)} total nodes in bitnodes.io")
                             
-                            for node_info in node_list[:max_nodes]:  # Limit to max_nodes
+                            for node_info in node_list[:max_nodes]:
                                 try:
                                     ip, port = node_info.split(':')
-                                    # Filter out invalid IPs
                                     if ip and port:
                                         nodes.append((ip, int(port)))
                                 except:
@@ -70,7 +62,6 @@ async def fetch_bitnodes_seeds(max_nodes: int = 10000) -> List[Tuple[str, int]]:
 
 
 def resolve_dns_seeds() -> List[Tuple[str, int]]:
-    """Resolve DNS seed nodes to IP addresses."""
     import socket
     
     resolved_nodes = []
@@ -119,13 +110,8 @@ async def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Crawl 500 nodes and create heatmap
   python main.py --max-nodes 500 --create-heatmap
-  
-  # Only crawl without geolocation
   python main.py --max-nodes 1000 --no-geolocation
-  
-  # Only create heatmap from existing database
   python main.py --heatmap-only
         """
     )
@@ -224,7 +210,6 @@ Examples:
     
     if not seed_nodes:
         logger.error("Could not resolve any seed nodes. Using hardcoded IPs.")
-        # Fallback to some known Bitcoin node IPs
         seed_nodes = [
             ("104.248.9.1", 8333),
             ("159.89.232.238", 8333),
@@ -238,7 +223,6 @@ Examples:
         timeout=args.timeout
     )
     
-    # Don't update visualization during crawling - only at the end
     nodes_data = await crawler.crawl(seed_nodes, max_nodes=args.max_nodes, update_viz_callback=None)
     
     if not nodes_data:
@@ -287,12 +271,9 @@ Examples:
         logger.info("Step 4: Updating JSON File")
         logger.info("=" * 60)
         
-        # Get ALL nodes from database, not just newly crawled ones
         all_nodes = db.get_nodes_with_location()
         
         if all_nodes:
-            # Only update JSON file, don't overwrite index.html
-            # index.html reads from bitcoin_nodes.json via map.js
             from visualization import export_nodes_json
             json_file = f"{args.output_dir}/bitcoin_nodes.json"
             export_nodes_json(all_nodes, json_file)

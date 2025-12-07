@@ -97,7 +97,6 @@
         .catch(error => {
             console.error('Error loading data:', error.message);
             console.error('Failed to load bitcoin_nodes.json. Please ensure the file exists.');
-            // Show error message to user
             const nodeCountEl = document.getElementById('node-count');
             if (nodeCountEl) {
                 nodeCountEl.textContent = 'Error loading data';

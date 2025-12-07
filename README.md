@@ -10,64 +10,68 @@ A Python-based Bitcoin network crawler that discovers Bitcoin **Mainnet** nodes,
 - **Interactive Heatmap**: Creates interactive heatmaps showing node distribution worldwide
 - **Static Frontend**: Frontend can be deployed as a static website
 
-## Installation
+## Usage - Command Sequence
 
+Follow these commands **in order** to set up and run the Bitcoin node crawler:
+
+### Step 1: Install Dependencies
 ```bash
+# Install all required Python packages (asyncio, aiohttp, etc.)
 pip install -r requirements.txt
 ```
 
-## Quick Start
-
-### 1. Update Node Data
-
-To crawl new Bitcoin nodes and update `frontend/bitcoin_nodes.json`:
-
+### Step 2: Crawl Bitcoin Nodes
 ```bash
-# Step 1: Crawl new nodes and add to database
+# Crawl Bitcoin network, discover nodes, get geolocation data, and store in database
+# This will:
+#   - Connect to seed nodes and discover other Bitcoin nodes
+#   - Collect node information (IP, port, version, etc.)
+#   - Get geolocation data for each IP address
+#   - Store all data in SQLite database (backend/bitcoin_nodes.db)
+#   - Update frontend/bitcoin_nodes.json with newly crawled nodes
 python3 main.py --max-nodes 1000 --create-heatmap
+```
 
-# Step 2: Update JSON file with ALL nodes from database
+### Step 3: Update JSON File (Optional but Recommended)
+```bash
+# Update frontend/bitcoin_nodes.json with ALL nodes from database (not just new ones)
+# This ensures the JSON file contains all historical nodes, not just the ones from the last crawl
 python3 -m backend.update_json
 ```
 
-**Note:** The `--create-heatmap` flag only exports newly crawled nodes. Always run `python3 -m backend.update_json` after crawling to get all nodes in the JSON file.
-
-### 2. Run the Server
-
-Start the HTTP server to view the map:
-
+### Step 4: Create/Update Index HTML (Optional)
 ```bash
+# Create or update the frontend/index.html file with heatmap visualization
+# This generates the HTML file that displays the interactive map
+python3 create_index.py
+```
+
+### Step 5: Start the Web Server
+```bash
+# Start HTTP server on http://localhost:8000 and open the map in your browser
+# The server serves the frontend files (index.html, map.js, styles.css, bitcoin_nodes.json)
+# Press Ctrl+C to stop the server
 python3 start_live_map.py
 ```
 
-This will:
-- Start a server on `http://localhost:8000`
-- Open the map in your browser
-- Display nodes from `frontend/bitcoin_nodes.json`
+## Alternative Commands
 
-Press `Ctrl+C` to stop the server.
-
-**If port 8000 is already in use:**
+### Update JSON File Only (Without Crawling)
 ```bash
-lsof -ti :8000 | xargs kill -9
-```
-
-## Detailed Usage
-
-### Update Node Data Only
-
-If you only want to update the JSON file from existing database data:
-
-```bash
+# If you already have nodes in the database and just want to update the JSON file
 python3 -m backend.update_json
 ```
 
-### View Existing Data
-
-If you already have node data in the database and want to create a heatmap:
-
+### Create Heatmap from Existing Database (Skip Crawling)
 ```bash
+# If you already have node data in the database and want to create/update the heatmap
 python3 main.py --heatmap-only
+```
+
+### Kill Process Using Port 8000 (If Needed)
+```bash
+# If port 8000 is already in use, kill the process using it
+lsof -ti :8000 | xargs kill -9
 ```
 
 ## Deployment

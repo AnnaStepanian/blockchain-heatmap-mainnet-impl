@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Main entry point for Bitcoin Node Crawler
-Run from project root: python main.py
-"""
 
 import sys
 import os

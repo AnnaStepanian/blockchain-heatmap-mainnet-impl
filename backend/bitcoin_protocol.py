@@ -1,8 +1,3 @@
-"""
-Bitcoin P2P Protocol Implementation
-Implements Bitcoin protocol messages: VERSION, VERACK, GETADDR, ADDR
-"""
-
 import struct
 import time
 from typing import List, Tuple, Optional
@@ -20,7 +15,6 @@ MSG_ADDR = b'addr\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 
 
 def varint_encode(value: int) -> bytes:
-    """Encode an integer as a Bitcoin varint."""
     if value < 0xFD:
         return struct.pack('<B', value)
     elif value <= 0xFFFF:
@@ -32,7 +26,6 @@ def varint_encode(value: int) -> bytes:
 
 
 def varint_decode(data: bytes, offset: int = 0) -> Tuple[int, int]:
-    """Decode a Bitcoin varint from bytes."""
     if offset >= len(data):
         raise ValueError("Insufficient data for varint")
     
@@ -50,7 +43,7 @@ def varint_decode(data: bytes, offset: int = 0) -> Tuple[int, int]:
             raise ValueError("Insufficient data for varint")
         value = struct.unpack('<I', data[offset + 1:offset + 5])[0]
         return value, offset + 5
-    else:  # 0xFF
+    else:
         if offset + 9 > len(data):
             raise ValueError("Insufficient data for varint")
         value = struct.unpack('<Q', data[offset + 1:offset + 9])[0]
@@ -58,7 +51,6 @@ def varint_decode(data: bytes, offset: int = 0) -> Tuple[int, int]:
 
 
 def create_message(command: bytes, payload: bytes, magic: int = MAINNET_MAGIC) -> bytes:
-    """Create a Bitcoin protocol message."""
     command_padded = command[:12].ljust(12, b'\x00')
     length = len(payload)
     import hashlib
@@ -77,7 +69,6 @@ def create_version_message(
     start_height: int = 0,
     relay: bool = True
 ) -> bytes:
-    """Create a Bitcoin VERSION message."""
     if timestamp is None:
         timestamp = int(time.time())
     
@@ -104,20 +95,14 @@ def create_version_message(
 
 
 def create_verack_message() -> bytes:
-    """Create a Bitcoin VERACK message."""
     return create_message(MSG_VERACK, b'')
 
 
 def create_getaddr_message() -> bytes:
-    """Create a Bitcoin GETADDR message."""
     return create_message(MSG_GETADDR, b'')
 
 
 def parse_addr_message(data: bytes) -> List[Tuple[str, int, int]]:
-    """
-    Parse an ADDR message.
-    Returns list of (ip, port, timestamp) tuples.
-    """
     if len(data) < 1:
         return []
     
@@ -154,10 +139,6 @@ def parse_addr_message(data: bytes) -> List[Tuple[str, int, int]]:
 
 
 def parse_message(data: bytes) -> Optional[Tuple[bytes, bytes]]:
-    """
-    Parse a Bitcoin protocol message.
-    Returns (command, payload) or None if incomplete/invalid.
-    """
     if len(data) < 24:
         return None
     
