@@ -238,20 +238,8 @@ Examples:
         timeout=args.timeout
     )
     
-    def update_viz_callback(nodes_data):
-        """Update visualization with current node data."""
-        if nodes_data:
-            nodes_for_viz = [node for node in nodes_data if node.get('latitude')]
-            if nodes_for_viz:
-                create_heatmap(
-                    nodes_for_viz, 
-                    f"{args.output_dir}/index.html",
-                    f"{args.output_dir}/bitcoin_nodes.json",
-                    load_once=True
-                )
-                logger.info(f"✓ Visualization updated: {len(nodes_for_viz)} nodes with location")
-    
-    nodes_data = await crawler.crawl(seed_nodes, max_nodes=args.max_nodes, update_viz_callback=update_viz_callback)
+    # Don't update visualization during crawling - only at the end
+    nodes_data = await crawler.crawl(seed_nodes, max_nodes=args.max_nodes, update_viz_callback=None)
     
     if not nodes_data:
         logger.error("No nodes were crawled. Exiting.")

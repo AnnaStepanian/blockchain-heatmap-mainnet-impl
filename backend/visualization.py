@@ -45,6 +45,45 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
     
     unique_countries = len(set(node.get('country', '') for node in valid_nodes if node.get('country')))
     
+    # Build update code based on load_once flag
+    update_text = "Data loaded" if load_once else "Nodes will be updated every 10 seconds"
+    
+    if load_once:
+        update_js_code = "// Static mode - no auto-updates"
+    else:
+        update_js_code = """// For dynamic updates, fetch from JSON file every 10 seconds
+        function tryUpdateFromFile() {
+            // Show loader
+            const loader = document.getElementById('update-loader');
+            const updateText = document.getElementById('update-text');
+            if (loader) loader.classList.remove('hidden');
+            if (updateText) updateText.textContent = 'Updating nodes...';
+            
+            fetch('bitcoin_nodes.json?t=' + new Date().getTime())
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                        .then(data => {
+                    // Update with fresh data from server
+                    console.log('✓ Updated from server:', data.length, 'nodes');
+                    loadNodes(data);
+                        })
+                        .catch(error => {
+                    // Silently fail - we have embedded data as fallback
+                    console.log('Using embedded data (server fetch failed):', error.message);
+                    // Hide loader even on error
+                    if (loader) loader.classList.add('hidden');
+                    if (updateText) updateText.textContent = 'Nodes will be updated every 10 seconds';
+                        });
+                }
+                
+        // Update from server every 10 seconds
+        setInterval(tryUpdateFromFile, 10000);
+        
+        // Also try to update immediately after page load (after 2 seconds)
+        setTimeout(tryUpdateFromFile, 2000);"""
+    
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -157,7 +196,7 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
         </div>
         <p class="loading">
             <span class="loader hidden" id="update-loader"></span>
-            <span id="update-text">Nodes will be updated every 10 seconds</span>
+            <span id="update-text">{update_text}</span>
         </p>
     </div>
     
@@ -265,7 +304,7 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
                     const loader = document.getElementById('update-loader');
                     const updateText = document.getElementById('update-text');
                     if (loader) loader.classList.add('hidden');
-                    if (updateText) updateText.textContent = 'Nodes will be updated every 10 seconds';
+                    if (updateText) updateText.textContent = '{update_text}';
             }} catch(error) {{
                 console.error('Error processing nodes:', error);
                 const loader = document.getElementById('update-loader');
@@ -278,38 +317,7 @@ def create_heatmap(nodes_data: List[Dict], output_file: str = "frontend/index.ht
         // Load nodes when page opens
         loadNodes();
         
-        // For dynamic updates, fetch from JSON file every 10 seconds
-        function tryUpdateFromFile() {{
-            // Show loader
-            const loader = document.getElementById('update-loader');
-            const updateText = document.getElementById('update-text');
-            if (loader) loader.classList.remove('hidden');
-            if (updateText) updateText.textContent = 'Updating nodes...';
-            
-            fetch('bitcoin_nodes.json?t=' + new Date().getTime())
-                .then(response => {{
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                }})
-                        .then(data => {{
-                    // Update with fresh data from server
-                    console.log('✓ Updated from server:', data.length, 'nodes');
-                    loadNodes(data);
-                        }})
-                        .catch(error => {{
-                    // Silently fail - we have embedded data as fallback
-                    console.log('Using embedded data (server fetch failed):', error.message);
-                    // Hide loader even on error
-                    if (loader) loader.classList.add('hidden');
-                    if (updateText) updateText.textContent = 'Nodes will be updated every 10 seconds';
-                        }});
-                }}
-                
-        // Update from server every 10 seconds
-        setInterval(tryUpdateFromFile, 10000);
-        
-        // Also try to update immediately after page load (after 2 seconds)
-        setTimeout(tryUpdateFromFile, 2000);
+        {update_js_code}
         
         // Ensure map is visible
         setTimeout(function() {{
